@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
         log.error("Error en la petición: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage())
+                new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage())
         );
     }
 
