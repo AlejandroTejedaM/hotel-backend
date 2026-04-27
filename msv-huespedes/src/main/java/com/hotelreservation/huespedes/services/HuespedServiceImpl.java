@@ -3,7 +3,8 @@ package com.hotelreservation.huespedes.services;
 import com.hotelreservation.commons.dto.habitaciones.HuespedRequest;
 import com.hotelreservation.commons.dto.habitaciones.HuespedResponse;
 import com.hotelreservation.commons.enums.EstadoRegistro;
-import com.hotelreservation.huespedes.entities.Huesped;import com.hotelreservation.huespedes.mappers.HuespedMapper;
+import com.hotelreservation.huespedes.entities.Huesped;
+import com.hotelreservation.huespedes.mappers.HuespedMapper;
 import com.hotelreservation.huespedes.repositories.HuespedRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class HuespedServiceImpl implements HuespedService{
                 .map(huespedMapper::entidadARespuesta)
                 .toList();
     }
+
     @Override
     public HuespedResponse encontrarPorId(Long id) {
 
@@ -40,16 +42,75 @@ public class HuespedServiceImpl implements HuespedService{
         return huespedMapper.entidadARespuesta(huesped);
 
     }
+
     @Override
     public HuespedResponse registrar(HuespedRequest request) {
-        return null;
+
+        validarDuplicados(request);
+
+        Huesped huesped = huespedMapper.requestAEntidad(request);
+        Huesped guardado = huespedRepository.save(huesped);
+
+        return huespedMapper.entidadARespuesta(guardado);
+
     }
     @Override
     public HuespedResponse actualizar(HuespedRequest request, Long id) {
-        return null;
+
+        Huesped huesped = huespedRepository
+                .findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
+                .orElseThrow(() -> new RuntimeException("Huésped no encontrado"));
+
+        validarDuplicadosUpdate(request, id);
+
+        huesped.setNombre(request.nombre());
+        huesped.setApellidoPaterno(request.apellidoPaterno());
+        huesped.setApellidoMaterno(request.apellidoMaterno());
+        huesped.setEmail(request.email());
+        huesped.setTelefono(request.telefono());
+        huesped.setDocumento(request.documento());
+        huesped.setNacionalidad(request.nacionalidad());
+
+        Huesped actualizado = huespedRepository.save(huesped);
+
+        return huespedMapper.entidadARespuesta(actualizado);
+
     }
+
     @Override
     public void eliminar(Long id) {
 
+    }
+
+    private void validarDuplicados(HuespedRequest request){
+
+        if (huespedRepository.findByEmailAndEstadoRegistro(request.email(), EstadoRegistro.ACTIVO).isPresent()) {
+            throw new RuntimeException("El email ya registrado");
+        }
+
+        if (huespedRepository.findByTelefonoAndEstadoRegistro(request.telefono(), EstadoRegistro.ACTIVO).isPresent()) {
+            throw new RuntimeException("El telefono ya registrado");
+        }
+        if (huespedRepository.findByDocumentoAndEstadoRegistro(request.documento(), EstadoRegistro.ACTIVO).isPresent()) {
+            throw new RuntimeException("El documento ya registrado");
+        }
+
+    }
+    private void validarDuplicadosUpdate(HuespedRequest request, Long id) {
+
+        var email = huespedRepository.findByEmailAndEstadoRegistro(request.email(), EstadoRegistro.ACTIVO);
+        if (email.isPresent() && !email.get().getIdHuesped().equals(id)) {
+            throw new RuntimeException("Email ya registrado");
+        }
+
+        var telefono = huespedRepository.findByTelefonoAndEstadoRegistro(request.telefono(), EstadoRegistro.ACTIVO);
+        if (telefono.isPresent() && !telefono.get().getIdHuesped().equals(id)) {
+            throw new RuntimeException("Teléfono ya registrado");
+        }
+
+        var documento = huespedRepository.findByDocumentoAndEstadoRegistro(request.documento(), EstadoRegistro.ACTIVO);
+        if (documento.isPresent() && !documento.get().getIdHuesped().equals(id)) {
+            throw new RuntimeException("Documento ya registrado");
+        }
     }
 }
