@@ -1,17 +1,19 @@
 package com.hotelreservation.huespedes.entities;
 
 
-import com.hotelreservation.huespedes.enums.EstadoRegistro;
+import com.hotelreservation.commons.enums.EstadoRegistro;
 import jakarta.persistence.*;
+import lombok.*;
+
 
 
 
 @Entity
 @Table(name= "HUESPEDES")
-//@Setter
-//@Getter
-//@AllArgsConstructor
-//@NoArgsConstructor
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 
 
@@ -19,7 +21,7 @@ public class Huesped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID_MEDICO")
+    @Column(name = "ID_HUESPED")
     private Long idHuesped;
 
     @Column(nullable = false, length = 50)
