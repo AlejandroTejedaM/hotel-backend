@@ -3,7 +3,7 @@ package com.hotelreservation.reservaciones;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.hotelreservation.reservaciones", "com.hotelreservation.commons"})
 public class MsvReservacionesApplication {
 
 	public static void main(String[] args) {
