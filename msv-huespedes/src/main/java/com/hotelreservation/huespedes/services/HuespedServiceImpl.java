@@ -1,7 +1,7 @@
 package com.hotelreservation.huespedes.services;
 
-import com.hotelreservation.commons.dto.habitaciones.HuespedRequest;
-import com.hotelreservation.commons.dto.habitaciones.HuespedResponse;
+import com.hotelreservation.commons.dto.huespedes.HuespedRequest;
+import com.hotelreservation.commons.dto.huespedes.HuespedResponse;
 import com.hotelreservation.commons.enums.EstadoRegistro;
 import com.hotelreservation.commons.exceptions.EntidadRelacionadaException;import com.hotelreservation.commons.exceptions.RecursoNoEncontradoException;import com.hotelreservation.huespedes.entities.Huesped;
 import com.hotelreservation.huespedes.mappers.HuespedMapper;

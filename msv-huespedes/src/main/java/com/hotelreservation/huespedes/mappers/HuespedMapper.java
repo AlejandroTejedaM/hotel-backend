@@ -1,7 +1,7 @@
 package com.hotelreservation.huespedes.mappers;
 
-import com.hotelreservation.commons.dto.habitaciones.HuespedRequest;
-import com.hotelreservation.commons.dto.habitaciones.HuespedResponse;
+import com.hotelreservation.commons.dto.huespedes.HuespedRequest;
+import com.hotelreservation.commons.dto.huespedes.HuespedResponse;
 import com.hotelreservation.commons.mappers.CommonMapper;
 import com.hotelreservation.huespedes.entities.Huesped;
 import com.hotelreservation.commons.enums.EstadoRegistro;
