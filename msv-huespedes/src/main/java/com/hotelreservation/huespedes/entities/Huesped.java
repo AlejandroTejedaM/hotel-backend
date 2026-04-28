@@ -5,9 +5,6 @@ import com.hotelreservation.commons.enums.EstadoRegistro;
 import jakarta.persistence.*;
 import lombok.*;
 
-
-
-
 @Entity
 @Table(name= "HUESPEDES")
 @Setter

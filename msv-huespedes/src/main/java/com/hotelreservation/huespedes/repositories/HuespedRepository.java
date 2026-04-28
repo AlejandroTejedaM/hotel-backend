@@ -4,6 +4,7 @@ import com.hotelreservation.commons.enums.EstadoRegistro;
 import com.hotelreservation.huespedes.entities.Huesped;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 
 import java.util.List;
