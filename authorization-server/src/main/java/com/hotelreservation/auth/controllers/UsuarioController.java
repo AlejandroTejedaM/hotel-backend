@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/admin/usuarios")
 @AllArgsConstructor
 public class UsuarioController {
-
+    
 }
