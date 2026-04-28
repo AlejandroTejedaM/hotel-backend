@@ -105,17 +105,17 @@ public class HuespedServiceImpl implements HuespedService{
     private void validarDuplicadosUpdate(HuespedRequest request, Long id) {
 
         var email = huespedRepository.findByEmailAndEstadoRegistro(request.email(), EstadoRegistro.ACTIVO);
-        if (email.isPresent() && !email.get().getIdHuesped().equals(id)) {
+        if (email.isPresent() && !email.get().getId().equals(id)) {
             throw new EntidadRelacionadaException("Email ya registrado");
         }
 
         var telefono = huespedRepository.findByTelefonoAndEstadoRegistro(request.telefono(), EstadoRegistro.ACTIVO);
-        if (telefono.isPresent() && !telefono.get().getIdHuesped().equals(id)) {
+        if (telefono.isPresent() && !telefono.get().getId().equals(id)) {
             throw new EntidadRelacionadaException("Teléfono ya registrado");
         }
 
         var documento = huespedRepository.findByDocumentoAndEstadoRegistro(request.documento(), EstadoRegistro.ACTIVO);
-        if (documento.isPresent() && !documento.get().getIdHuesped().equals(id)) {
+        if (documento.isPresent() && !documento.get().getId().equals(id)) {
             throw new EntidadRelacionadaException("Documento ya registrado");
         }
     }

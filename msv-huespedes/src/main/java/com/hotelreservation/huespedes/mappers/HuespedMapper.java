@@ -38,7 +38,7 @@ public class HuespedMapper implements CommonMapper<HuespedRequest, HuespedRespon
         if(entity == null) return null;
 
         return new HuespedResponse(
-                entity.getIdHuesped(),
+                entity.getId(),
                 entity.getNombre(),
                 entity.getApellidoPaterno(),
                 entity.getApellidoMaterno(),

@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name= "HUESPEDES")
+@Table(name = "HUESPEDES")
 @Setter
 @Getter
 @AllArgsConstructor
@@ -19,7 +19,7 @@ public class Huesped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_HUESPED")
-    private Long idHuesped;
+    private Long id;
 
     @Column(nullable = false, length = 50)
     private String nombre;
