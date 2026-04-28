@@ -36,6 +36,14 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.PUT,    "/api/habitaciones/**").hasAnyRole("ADMIN", "USER")
                         .pathMatchers(HttpMethod.POST,   "/api/habitaciones/**").hasRole("ADMIN")
                         .pathMatchers(HttpMethod.DELETE, "/api/habitaciones/**").hasRole("ADMIN")
+
+                        // --------------- HUESPEDES ------------
+                        .pathMatchers(HttpMethod.GET,    "/api/huespedes/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.POST,   "/api/huespedes/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.PUT,    "/api/huespedes/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.DELETE, "/api/huespedes/**").hasAnyRole("ADMIN", "USER")
+                        .anyExchange().authenticated()
+
                 )
 
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt ->
