@@ -53,7 +53,7 @@ public class HuespedServiceImpl implements HuespedService{
 
         Huesped huesped = huespedMapper.requestAEntidad(request);
         Huesped guardado = huespedRepository.save(huesped);
-
+        log.info("Huésped registrado exitosamente con id: {}", guardado.getId());
         return huespedMapper.entidadARespuesta(guardado);
 
     }
@@ -76,6 +76,7 @@ public class HuespedServiceImpl implements HuespedService{
         huesped.setNacionalidad(request.nacionalidad());
 
         Huesped actualizado = huespedRepository.save(huesped);
+        log.info("Huésped con id: {} actualizado correctamente", id);
 
         return huespedMapper.entidadARespuesta(actualizado);
 
@@ -90,6 +91,8 @@ public class HuespedServiceImpl implements HuespedService{
 
         huesped.setEstadoRegistro(EstadoRegistro.ELIMINADO);
         huespedRepository.save(huesped);
+        log.info("Huésped con id: {} eliminado...", id);
+
 
     }
 
