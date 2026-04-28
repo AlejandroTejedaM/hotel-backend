@@ -1,6 +1,6 @@
 package com.hotelreservation.commons.dto.habitaciones;
 
-import com.hotelreservation.commons.enums.EstadoRegistro;
+
 
 public record HuespedResponse(
 
@@ -12,7 +12,7 @@ public record HuespedResponse(
         String telefono,
         String documento,
         String nacionalidad,
-        EstadoRegistro estadoRegistro
+        String estadoRegistro
 
 ) {
 

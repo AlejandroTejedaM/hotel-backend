@@ -18,7 +18,8 @@ public class HuespedController extends CommonController<HuespedRequest, HuespedR
         super(service);
     }
     @GetMapping("/id-huesped/{id}")
-    public HuespedResponse obtenerPorIdHuesped(@PathVariable Long id) {
+    public HuespedResponse encontrarPorIdSinValidarEstado (@PathVariable Long id) {
         return service.encontrarPorId(id);
     }
+
 }

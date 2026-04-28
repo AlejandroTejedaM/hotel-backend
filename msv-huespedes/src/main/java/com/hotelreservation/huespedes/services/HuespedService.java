@@ -6,4 +6,6 @@ import com.hotelreservation.commons.services.CrudService;
 
 public interface HuespedService extends CrudService<HuespedRequest, HuespedResponse>{
 
+    HuespedResponse encontrarPorIdSinValidarEstado(Long id);
+
 }

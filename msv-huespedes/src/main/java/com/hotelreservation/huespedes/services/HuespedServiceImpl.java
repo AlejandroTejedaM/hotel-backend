@@ -25,6 +25,7 @@ public class HuespedServiceImpl implements HuespedService{
 
     @Override
     public List<HuespedResponse> list() {
+        log.info("Obteniendo lista de huéspedes activos...");
 
         return huespedRepository
                 .findAllByEstadoRegistro(EstadoRegistro.ACTIVO)
@@ -35,6 +36,7 @@ public class HuespedServiceImpl implements HuespedService{
 
     @Override
     public HuespedResponse encontrarPorId(Long id) {
+        log.info("Buscando huésped con id: {}", id);
 
         Huesped huesped = huespedRepository.findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
                 .orElseThrow(() -> new RecursoNoEncontradoException("El huesped no ha sido encontrado"));
@@ -45,6 +47,7 @@ public class HuespedServiceImpl implements HuespedService{
 
     @Override
     public HuespedResponse registrar(HuespedRequest request) {
+        log.info("Registrando nuevo huesped con email: {}", request.email());
 
         validarDuplicados(request);
 
@@ -56,6 +59,7 @@ public class HuespedServiceImpl implements HuespedService{
     }
     @Override
     public HuespedResponse actualizar(HuespedRequest request, Long id) {
+        log.info("Actualizando huésped con id: {}", id);
 
         Huesped huesped = huespedRepository
                 .findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
@@ -79,6 +83,7 @@ public class HuespedServiceImpl implements HuespedService{
 
     @Override
     public void eliminar(Long id) {
+        log.info("Eliminando (lógicamente) huésped con id: {}", id);
 
         Huesped huesped = huespedRepository.findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Huésped no encontrado"));
@@ -89,6 +94,7 @@ public class HuespedServiceImpl implements HuespedService{
     }
 
     private void validarDuplicados(HuespedRequest request){
+        log.info("Validando los duplicados para nuevo huésped");
 
         if (huespedRepository.findByEmailAndEstadoRegistro(request.email(), EstadoRegistro.ACTIVO).isPresent()) {
             throw new EntidadRelacionadaException("El email ya registrado");
@@ -103,6 +109,7 @@ public class HuespedServiceImpl implements HuespedService{
 
     }
     private void validarDuplicadosUpdate(HuespedRequest request, Long id) {
+        log.info("Validando duplicados para actualización de huésped con id: {}", id);
 
         var email = huespedRepository.findByEmailAndEstadoRegistro(request.email(), EstadoRegistro.ACTIVO);
         if (email.isPresent() && !email.get().getId().equals(id)) {
@@ -118,5 +125,12 @@ public class HuespedServiceImpl implements HuespedService{
         if (documento.isPresent() && !documento.get().getId().equals(id)) {
             throw new EntidadRelacionadaException("Documento ya registrado");
         }
+    }
+
+    @Override
+    public HuespedResponse encontrarPorIdSinValidarEstado(Long id) {
+        log.info("Buscando huesped con id: {} sin validar el estado del registro...");
+        Huesped huesped = huespedRepository.findById(id).orElseThrow(() -> new RecursoNoEncontradoException("El huesped no ha sido encontrado..."));
+        return huespedMapper.entidadARespuesta(huesped);
     }
 }
