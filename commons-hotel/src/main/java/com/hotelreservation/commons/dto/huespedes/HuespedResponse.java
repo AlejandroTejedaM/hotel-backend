@@ -1,4 +1,4 @@
-package com.hotelreservation.commons.dto.habitaciones;
+package com.hotelreservation.commons.dto.huespedes;
 
 
 
