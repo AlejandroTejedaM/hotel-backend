@@ -100,7 +100,6 @@ public class HuespedServiceImpl implements HuespedService{
         huespedRepository.save(huesped);
         log.info("Huésped con id: {} eliminado exitosamente", id);
 
-
     }
 
     private void validarDuplicados(HuespedRequest request){
