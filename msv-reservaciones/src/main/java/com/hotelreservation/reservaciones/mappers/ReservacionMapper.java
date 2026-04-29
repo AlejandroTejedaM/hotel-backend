@@ -2,6 +2,8 @@ package com.hotelreservation.reservaciones.mappers;
 
 import com.hotelreservation.commons.dto.habitaciones.DatosHabitacion;
 import com.hotelreservation.commons.dto.habitaciones.HabitacionResponse;
+import com.hotelreservation.commons.dto.huespedes.HuespedResponse;
+import com.hotelreservation.commons.dto.huespedes.DatosHuesped;
 import com.hotelreservation.commons.dto.reservaciones.ReservacionRequest;
 import com.hotelreservation.commons.dto.reservaciones.ReservacionResponse;
 import com.hotelreservation.commons.enums.EstadoRegistro;
@@ -26,11 +28,11 @@ public class ReservacionMapper implements CommonMapper<ReservacionRequest, Reser
                 .build();
     }
 
-    public Reservacion requestAEntidad(ReservacionRequest request, HabitacionResponse habitacionResponse) {
+    public Reservacion requestAEntidad(ReservacionRequest request, HabitacionResponse habitacionResponse, HuespedResponse huespedResponse) {
         if (request == null) return null;
         Reservacion reservacion = requestAEntidad(request);
         reservacion.setIdHabitacion(habitacionResponse.id());
-        reservacion.setIdHuesped(1L);
+        reservacion.setIdHuesped(huespedResponse.idHuesped());
         return reservacion;
     }
 
@@ -41,18 +43,20 @@ public class ReservacionMapper implements CommonMapper<ReservacionRequest, Reser
         return new ReservacionResponse(
                 entity.getId(),
                 null,
+                null,
                 entity.getEstadoReserva().getDescripcion(),
                 StringCustomUtils.localDateToString(entity.getFechaEntrada()),
                 StringCustomUtils.localDateToString(entity.getFechaSalida())
         );
     }
 
-    public ReservacionResponse entidadARespuesta(Reservacion entity, HabitacionResponse habitacion) {
+    public ReservacionResponse entidadARespuesta(Reservacion entity, HabitacionResponse habitacion, HuespedResponse huespedResponse) {
         if (entity == null) return null;
 
         return new ReservacionResponse(
                 entity.getId(),
                 habitacionARespuesta(habitacion),
+                huespedARespuesta(huespedResponse),
                 entity.getEstadoReserva().getDescripcion(),
                 StringCustomUtils.localDateToString(entity.getFechaEntrada()),
                 StringCustomUtils.localDateToString(entity.getFechaSalida())
@@ -67,6 +71,22 @@ public class ReservacionMapper implements CommonMapper<ReservacionRequest, Reser
                 habitacion.tipo(),
                 habitacion.precio(),
                 habitacion.capacidad()
+        );
+    }
+
+    public DatosHuesped huespedARespuesta(HuespedResponse huesped) {
+        if (huesped == null) return null;
+
+        return new DatosHuesped(
+                String.join(" ",
+                        huesped.nombre(),
+                        huesped.apellidoPaterno(),
+                        huesped.apellidoMaterno()
+                ),
+                huesped.email(),
+                huesped.telefono(),
+                huesped.documento(),
+                huesped.nacionalidad()
         );
     }
 }

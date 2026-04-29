@@ -1,7 +1,9 @@
 package com.hotelreservation.reservaciones.services;
 
 import com.hotelreservation.commons.client.HabitacionClient;
+import com.hotelreservation.commons.client.HuespedClient;
 import com.hotelreservation.commons.dto.habitaciones.HabitacionResponse;
+import com.hotelreservation.commons.dto.huespedes.HuespedResponse;
 import com.hotelreservation.commons.dto.reservaciones.ReservacionRequest;
 import com.hotelreservation.commons.dto.reservaciones.ReservacionResponse;
 import com.hotelreservation.commons.enums.EstadoHabitacion;
@@ -28,13 +30,18 @@ public class ReservacionServiceImpl implements ReservacionService {
     private final ReservacionRepository reservacionRepository;
     private final ReservacionMapper reservacionMapper;
     private final HabitacionClient habitacionClient;
+    private final HuespedClient huespedClient;
 
     @Override
     @Transactional(readOnly = true)
     public List<ReservacionResponse> list() {
         log.info("Listando reservaciones");
         return reservacionRepository.findAll().stream()
-                .map(reservacionMapper::entidadARespuesta)
+                .map(reservacion -> {
+                    HabitacionResponse habitacionResponse = findHabitacionById(reservacion.getIdHabitacion());
+                    HuespedResponse huespedResponse = findHuespedById(reservacion.getIdHuesped());
+                    return reservacionMapper.entidadARespuesta(reservacion, habitacionResponse, huespedResponse);
+                })
                 .toList();
     }
 
@@ -44,30 +51,32 @@ public class ReservacionServiceImpl implements ReservacionService {
         log.info("Buscando reservación con id: {}", id);
         Reservacion reservacion = findActiveByIdOrException(id);
         HabitacionResponse habitacionResponse = findHabitacionById(reservacion.getIdHabitacion());
-        return reservacionMapper.entidadARespuesta(reservacion, habitacionResponse);
+        HuespedResponse huespedResponse = findHuespedById(reservacion.getIdHuesped());
+        return reservacionMapper.entidadARespuesta(reservacion, habitacionResponse, huespedResponse);
     }
 
     @Override
     public ReservacionResponse registrar(ReservacionRequest request) {
         log.info("Registrando una nueva reservación...");
         StringCustomUtils.validarFechasReservacion(request.fechaEntrada(), request.fechaSalida());
-        //TODO: Incluir validación donde el huésped debe existir
+        HuespedResponse huespedResponse = findActiveHuespedById(request.idHuesped());
         HabitacionResponse habitacionResponse = findHabitacionActivaById(request.idHabitacion());
         ensureHabitacionIsAvailable(habitacionResponse);
 
-        Reservacion reservacion = reservacionMapper.requestAEntidad(request, habitacionResponse);
+        Reservacion reservacion = reservacionMapper.requestAEntidad(request, habitacionResponse, huespedResponse);
         reservacionRepository.save(reservacion);
 
         changeEstadoHabitacion(habitacionResponse.id(), EstadoHabitacion.OCUPADA);
         log.info("Habitación apartada por la reservación con id: {}", reservacion.getId());
-        return reservacionMapper.entidadARespuesta(reservacion, habitacionResponse);
+        return reservacionMapper.entidadARespuesta(reservacion, habitacionResponse, huespedResponse);
     }
 
     @Override
     public ReservacionResponse actualizar(ReservacionRequest request, Long id) {
         log.info("Actualizando reservación con id: {}", id);
         Reservacion reservacion = findActiveByIdOrException(id);
-        HabitacionResponse habitacionResponse = findHabitacionById(request.idHabitacion());
+        HabitacionResponse habitacionResponse = findHabitacionActivaById(request.idHabitacion());
+        HuespedResponse huespedResponse = findActiveHuespedById(request.idHuesped());
         LocalDate fechaEntradaActual = reservacion.getFechaEntrada();
 
         LocalDate fechaEntrada = StringCustomUtils.stringToLocalDate(request.fechaEntrada());
@@ -87,7 +96,7 @@ public class ReservacionServiceImpl implements ReservacionService {
             case FINALIZADA, CANCELADA -> throw new IllegalStateException("No se pueden modificar reservaciones: " + List.of(EstadoReserva.CANCELADA, EstadoReserva.FINALIZADA));
         }
         log.info("Reservación con id: {} para habitación número: {} actualizada", id, habitacionResponse.numero());
-        return reservacionMapper.entidadARespuesta(reservacion, habitacionResponse);
+        return reservacionMapper.entidadARespuesta(reservacion, habitacionResponse, huespedResponse);
     }
 
     @Override
@@ -107,9 +116,24 @@ public class ReservacionServiceImpl implements ReservacionService {
         log.info("Estado de la reservación con id: {} cambiado a: {}", idReserva, estado);
     }
 
+    @Override
+    public Boolean tieneReservacionesPorIdHuespedYEstadoReserva(Long idHuesped, Integer idEstado) {
+        log.info("Buscando reservaciones por idHuesped: {} y estadoReserva: {}", idHuesped, idEstado);
+        EstadoReserva estado = EstadoReserva.encontrarPorCodigo(idEstado);
+        return reservacionRepository.existsByIdHuespedAndEstadoReserva(idHuesped, estado);
+    }
+
     public Reservacion findActiveByIdOrException(Long id) {
         return reservacionRepository.findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Reservación no encontrada con id: " + id));
+    }
+
+    public HuespedResponse findHuespedById(Long id) {
+        return huespedClient.findById(id);
+    }
+
+    public HuespedResponse findActiveHuespedById(Long id) {
+        return huespedClient.findActiveById(id);
     }
 
     public HabitacionResponse findHabitacionActivaById(Long id) {
