@@ -30,6 +30,12 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        // --------------- RESERVACIONES ------------
+                        .pathMatchers(HttpMethod.GET,    "/api/reservaciones/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.PUT,    "/api/reservaciones/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.POST,   "/api/reservaciones/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.DELETE, "/api/reservaciones/**").hasAnyRole("ADMIN", "USER")
+
                         // --------------- HABITACIONES ------------
                         .pathMatchers(HttpMethod.GET,    "/api/habitaciones/**").hasAnyRole("ADMIN", "USER")
                         // TODO: clarificar con profe si USER puede modificar tipo, numero, capacidad

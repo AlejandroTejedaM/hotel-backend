@@ -52,7 +52,7 @@ public class Habitacion {
     }
 
     public void cambiarEstadoHabitacion(EstadoHabitacion estadoHabitacion) {
-        validarCambioEstado(estadoHabitacion);
+        //validarCambioEstado(estadoHabitacion);
         this.estadoHabitacion = estadoHabitacion;
     }
 
