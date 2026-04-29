@@ -1,5 +1,6 @@
 package com.hotelreservation.huespedes.services;
 
+import com.hotelreservation.commons.client.ReservaClient;
 import com.hotelreservation.commons.dto.huespedes.HuespedRequest;
 import com.hotelreservation.commons.dto.huespedes.HuespedResponse;
 import com.hotelreservation.commons.enums.EstadoRegistro;
@@ -21,6 +22,7 @@ public class HuespedServiceImpl implements HuespedService{
 
     private final HuespedRepository huespedRepository;
     private final HuespedMapper huespedMapper;
+    private final ReservaClient reservaClient;
 
 
     @Override
@@ -84,14 +86,19 @@ public class HuespedServiceImpl implements HuespedService{
 
     @Override
     public void eliminar(Long id) {
-        log.info("Eliminando (lógicamente) huésped con id: {}", id);
+        log.info("Eliminando lógicamente huésped con id: {}", id);
 
         Huesped huesped = huespedRepository.findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Huésped no encontrado"));
 
+        Boolean tieneReservasEnCurso = reservaClient.tieneReservacionesPorIdHuespedYIdEstadoReservacion( 2, id);
+        if (tieneReservasEnCurso) {
+            throw new EntidadRelacionadaException("No se puede eliminar un huésped con reservas EN_CURSO");
+        }
+
         huesped.setEstadoRegistro(EstadoRegistro.ELIMINADO);
         huespedRepository.save(huesped);
-        log.info("Huésped con id: {} eliminado...", id);
+        log.info("Huésped con id: {} eliminado exitosamente", id);
 
 
     }
