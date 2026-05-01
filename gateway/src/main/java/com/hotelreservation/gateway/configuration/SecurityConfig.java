@@ -38,7 +38,6 @@ public class SecurityConfig {
 
                         // --------------- HABITACIONES ------------
                         .pathMatchers(HttpMethod.GET,    "/api/habitaciones/**").hasAnyRole("ADMIN", "USER")
-                        // TODO: clarificar con profe si USER puede modificar tipo, numero, capacidad
                         .pathMatchers(HttpMethod.PUT,    "/api/habitaciones/**").hasAnyRole("ADMIN", "USER")
                         .pathMatchers(HttpMethod.POST,   "/api/habitaciones/**").hasRole("ADMIN")
                         .pathMatchers(HttpMethod.DELETE, "/api/habitaciones/**").hasRole("ADMIN")
