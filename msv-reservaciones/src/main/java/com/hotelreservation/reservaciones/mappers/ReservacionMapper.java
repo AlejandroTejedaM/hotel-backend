@@ -32,7 +32,7 @@ public class ReservacionMapper implements CommonMapper<ReservacionRequest, Reser
         if (request == null) return null;
         Reservacion reservacion = requestAEntidad(request);
         reservacion.setIdHabitacion(habitacionResponse.id());
-        reservacion.setIdHuesped(huespedResponse.idHuesped());
+        reservacion.setIdHuesped(huespedResponse.id());
         return reservacion;
     }
 
@@ -79,7 +79,7 @@ public class ReservacionMapper implements CommonMapper<ReservacionRequest, Reser
         if (huesped == null) return null;
 
         return new DatosHuesped(
-                huesped.idHuesped(),
+                huesped.id(),
                 String.join(" ",
                         huesped.nombre(),
                         huesped.apellidoPaterno(),

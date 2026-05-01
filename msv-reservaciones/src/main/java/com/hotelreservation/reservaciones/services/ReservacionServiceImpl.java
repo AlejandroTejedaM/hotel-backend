@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional
@@ -86,9 +87,9 @@ public class ReservacionServiceImpl implements ReservacionService {
         switch (reservacion.getEstadoReserva()) {
             case CONFIRMADA -> {
                 StringCustomUtils.validarFechasReservacion(request.fechaEntrada(), request.fechaSalida());
-                if (request.idHuesped() != huespedOriginal.idHuesped()) {
+                if (request.idHuesped() != huespedOriginal.id()) {
                     huespedActualizado = findActiveHuespedById(request.idHuesped());
-                    reservacion.changeHuesped(huespedActualizado.idHuesped());
+                    reservacion.changeHuesped(huespedActualizado.id());
                 }
 
                 if (request.idHabitacion() != habitacionOriginal.id()) {
@@ -105,6 +106,7 @@ public class ReservacionServiceImpl implements ReservacionService {
                 if (!fechaEntradaActual.isEqual(fechaEntrada)) {
                     throw new IllegalArgumentException("No se puede modificar la fecha de entrada después de Check-In");
                 }
+                verifyModificationEligibility(reservacion, request);
                 StringCustomUtils.validarFechasReservacion(StringCustomUtils.localDateToString(fechaEntradaActual), StringCustomUtils.localDateToString(fechaSalida));
                 reservacion.changeFechaSalida(fechaSalida);
             }
@@ -116,6 +118,16 @@ public class ReservacionServiceImpl implements ReservacionService {
                 habitacionActualizada != null ? habitacionActualizada : habitacionOriginal,
                 huespedActualizado != null ? huespedActualizado : huespedOriginal
         );
+    }
+
+    private void verifyModificationEligibility(Reservacion reservacion, ReservacionRequest request) {
+        if (!Objects.equals(request.idHabitacion(), reservacion.getIdHabitacion())) {
+            throw new IllegalStateException("No se puede modificar la habitación una vez realizado el Check-in o Check-out");
+        }
+
+        if (!Objects.equals(request.idHuesped(), reservacion.getIdHuesped())) {
+            throw new IllegalStateException("No se puede modificar el huésped una vez realizado el Check-in o Check-out");
+        }
     }
 
     @Override

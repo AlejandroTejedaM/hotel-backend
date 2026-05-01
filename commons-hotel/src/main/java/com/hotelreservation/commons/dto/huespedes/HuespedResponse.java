@@ -4,7 +4,7 @@ package com.hotelreservation.commons.dto.huespedes;
 
 public record HuespedResponse(
 
-        Long idHuesped,
+        Long id,
         String nombre,
         String apellidoPaterno,
         String apellidoMaterno,
