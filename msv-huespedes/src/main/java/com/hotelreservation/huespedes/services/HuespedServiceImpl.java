@@ -4,6 +4,7 @@ import com.hotelreservation.commons.client.ReservaClient;
 import com.hotelreservation.commons.dto.huespedes.HuespedRequest;
 import com.hotelreservation.commons.dto.huespedes.HuespedResponse;
 import com.hotelreservation.commons.enums.EstadoRegistro;
+import com.hotelreservation.commons.enums.EstadoReserva;
 import com.hotelreservation.commons.exceptions.EntidadRelacionadaException;import com.hotelreservation.commons.exceptions.RecursoNoEncontradoException;import com.hotelreservation.huespedes.entities.Huesped;
 import com.hotelreservation.huespedes.mappers.HuespedMapper;
 import com.hotelreservation.huespedes.repositories.HuespedRepository;
@@ -86,19 +87,26 @@ public class HuespedServiceImpl implements HuespedService{
 
     @Override
     public void eliminar(Long id) {
-        log.info("Eliminando lógicamente huésped con id: {}", id);
+        log.info("Eliminando (lógicamente) huésped con id: {}", id);
 
         Huesped huesped = huespedRepository.findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Huésped no encontrado"));
 
-        Boolean tieneReservasEnCurso = reservaClient.tieneReservacionesPorIdHuespedYIdEstadoReservacion( 2, id);
-        if (tieneReservasEnCurso) {
-            throw new EntidadRelacionadaException("No se puede eliminar un huésped con reservas EN_CURSO");
+
+        Boolean tieneReservacionesEnCurso = reservaClient
+                .tieneReservacionesPorIdHuespedYIdEstadoReservacion(
+                        EstadoReserva.EN_CURSO.getCodigo(), id
+                );
+
+        if (Boolean.TRUE.equals(tieneReservacionesEnCurso)) {
+            throw new EntidadRelacionadaException(
+                    "No se puede eliminar el huésped porque tiene reservaciones en curso (Check-In activo)"
+            );
         }
 
         huesped.setEstadoRegistro(EstadoRegistro.ELIMINADO);
         huespedRepository.save(huesped);
-        log.info("Huésped con id: {} eliminado exitosamente", id);
+        log.info("Huésped con id: {} eliminado...", id);
 
     }
 
