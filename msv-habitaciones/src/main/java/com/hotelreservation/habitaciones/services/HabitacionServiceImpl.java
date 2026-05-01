@@ -42,7 +42,7 @@ public class HabitacionServiceImpl implements HabitacionService {
     @Transactional(readOnly = true)
     public List<HabitacionResponse> list() {
         log.info("Listando habitaciones");
-        return habitacionRepository.findAll().stream()
+        return habitacionRepository.findAllByEstadoRegistro(EstadoRegistro.ACTIVO).stream()
                 .map(habitacionMapper::entidadARespuesta).toList();
     }
 
@@ -63,9 +63,6 @@ public class HabitacionServiceImpl implements HabitacionService {
     }
 
     @Override
-    // TODO: clarificar restricción de modificar precio de habitación (separar endpoint o validar en service)
-    // TODO: clarificar si USER puede modificar tipo, numero, capacidad
-    // TODO: si no puede modificar precio, separar endpoint PUT /{id}/precio solo ADMIN?
     public HabitacionResponse actualizar(HabitacionRequest request, Long id) {
         log.info("Actualizando habitación con id: {}", id);
         Habitacion habitacion = findActiveByIdOrException(id);

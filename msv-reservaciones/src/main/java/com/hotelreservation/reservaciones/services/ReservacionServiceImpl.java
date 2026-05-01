@@ -36,7 +36,7 @@ public class ReservacionServiceImpl implements ReservacionService {
     @Transactional(readOnly = true)
     public List<ReservacionResponse> list() {
         log.info("Listando reservaciones");
-        return reservacionRepository.findAll().stream()
+        return reservacionRepository.findAllByEstadoRegistro(EstadoRegistro.ACTIVO).stream()
                 .map(reservacion -> {
                     HabitacionResponse habitacionResponse = findHabitacionById(reservacion.getIdHabitacion());
                     HuespedResponse huespedResponse = findHuespedById(reservacion.getIdHuesped());
@@ -75,28 +75,47 @@ public class ReservacionServiceImpl implements ReservacionService {
     public ReservacionResponse actualizar(ReservacionRequest request, Long id) {
         log.info("Actualizando reservación con id: {}", id);
         Reservacion reservacion = findActiveByIdOrException(id);
-        HabitacionResponse habitacionResponse = findHabitacionActivaById(request.idHabitacion());
-        HuespedResponse huespedResponse = findActiveHuespedById(request.idHuesped());
         LocalDate fechaEntradaActual = reservacion.getFechaEntrada();
+        HabitacionResponse habitacionOriginal = findHabitacionActivaById(reservacion.getIdHabitacion());
+        HuespedResponse huespedOriginal = findActiveHuespedById(reservacion.getIdHuesped());
 
         LocalDate fechaEntrada = StringCustomUtils.stringToLocalDate(request.fechaEntrada());
         LocalDate fechaSalida = StringCustomUtils.stringToLocalDate(request.fechaSalida());
+        HuespedResponse huespedActualizado = null;
+        HabitacionResponse habitacionActualizada = null;
         switch (reservacion.getEstadoReserva()) {
             case CONFIRMADA -> {
                 StringCustomUtils.validarFechasReservacion(request.fechaEntrada(), request.fechaSalida());
+                if (request.idHuesped() != huespedOriginal.idHuesped()) {
+                    huespedActualizado = findActiveHuespedById(request.idHuesped());
+                    reservacion.changeHuesped(huespedActualizado.idHuesped());
+                }
+
+                if (request.idHabitacion() != habitacionOriginal.id()) {
+                    habitacionActualizada = findHabitacionActivaById(request.idHabitacion());
+                    ensureHabitacionIsAvailable(habitacionActualizada);
+                    changeEstadoHabitacion(habitacionOriginal.id(), EstadoHabitacion.DISPONIBLE);
+                    changeEstadoHabitacion(habitacionActualizada.id(), EstadoHabitacion.OCUPADA);
+                    reservacion.changeHabitacion(request.idHabitacion());
+                }
+
                 reservacion.changeFechaEntradaYSalida(fechaEntrada, fechaSalida);
             }
             case EN_CURSO -> {
                 if (!fechaEntradaActual.isEqual(fechaEntrada)) {
                     throw new IllegalArgumentException("No se puede modificar la fecha de entrada después de Check-In");
                 }
-                StringCustomUtils.validarFechasReservacion(StringCustomUtils.localDateToString(fechaEntradaActual), fechaSalida.toString());
+                StringCustomUtils.validarFechasReservacion(StringCustomUtils.localDateToString(fechaEntradaActual), StringCustomUtils.localDateToString(fechaSalida));
                 reservacion.changeFechaSalida(fechaSalida);
             }
-            case FINALIZADA, CANCELADA -> throw new IllegalStateException("No se pueden modificar reservaciones: " + List.of(EstadoReserva.CANCELADA, EstadoReserva.FINALIZADA));
+            case FINALIZADA, CANCELADA ->
+                    throw new IllegalStateException("No se pueden modificar reservaciones: " + List.of(EstadoReserva.CANCELADA, EstadoReserva.FINALIZADA));
         }
-        log.info("Reservación con id: {} para habitación número: {} actualizada", id, habitacionResponse.numero());
-        return reservacionMapper.entidadARespuesta(reservacion, habitacionResponse, huespedResponse);
+        log.info("Reservación con id: {} para habitación número: {} actualizada", id, habitacionOriginal.numero());
+        return reservacionMapper.entidadARespuesta(reservacion,
+                habitacionActualizada != null ? habitacionActualizada : habitacionOriginal,
+                huespedActualizado != null ? huespedActualizado : huespedOriginal
+        );
     }
 
     @Override
@@ -155,11 +174,20 @@ public class ReservacionServiceImpl implements ReservacionService {
         habitacionClient.actualizarEstadoHabitacion(idHabitacion, estadoHabitacion.getCodigo());
     }
 
-    public void updateRoomAvailabilityByEstadoReservacion(Long id, EstadoReserva estadoNuevo, Long idHabitacion) {
-        Reservacion reservacion = findActiveByIdOrException(id);
+    public void updateRoomAvailabilityByEstadoReservacion(Long idReservacion, EstadoReserva estadoNuevo, Long idHabitacion) {
+        Reservacion reservacion = findActiveByIdOrException(idReservacion);
         EstadoReserva estadoAnterior = reservacion.getEstadoReserva();
 
         switch (estadoNuevo) {
+            case CONFIRMADA -> {
+                if (estadoAnterior == EstadoReserva.EN_CURSO || estadoAnterior == EstadoReserva.FINALIZADA) {
+                    throw new IllegalStateException("Una reservación no puede volver a confirmada una vez realizado Check-in o Check-out");
+                }
+                if (estadoAnterior == EstadoReserva.CANCELADA) {
+                    throw new IllegalStateException("Una reservación cancelada no puede volver a ser confirmada");
+                }
+                changeEstadoHabitacion(idHabitacion, EstadoHabitacion.DISPONIBLE);
+            }
             case EN_CURSO -> {
                 if (!estadoAnterior.equals(EstadoReserva.CONFIRMADA)) {
                     throw new IllegalStateException("Solo se puede hacer Check-in desde:" + EstadoReserva.CONFIRMADA);

@@ -1,8 +1,11 @@
 package com.hotelreservation.commons.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+@Slf4j
 public class StringCustomUtils {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -27,7 +30,6 @@ public class StringCustomUtils {
     public static void validarFechasReservacion(String fechaEntrada, String fechaSalida) {
         LocalDate entrada = stringToLocalDate(fechaEntrada);
         LocalDate salida = stringToLocalDate(fechaSalida);
-
         if (entrada == null || salida == null) {
             throw new IllegalArgumentException("Las fechas no pueden ser nulas");
         }

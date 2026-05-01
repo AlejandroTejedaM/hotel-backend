@@ -67,6 +67,7 @@ public class ReservacionMapper implements CommonMapper<ReservacionRequest, Reser
         if (habitacion == null) return null;
 
         return new DatosHabitacion(
+                habitacion.id(),
                 habitacion.numero(),
                 habitacion.tipo(),
                 habitacion.precio(),
@@ -78,6 +79,7 @@ public class ReservacionMapper implements CommonMapper<ReservacionRequest, Reser
         if (huesped == null) return null;
 
         return new DatosHuesped(
+                huesped.idHuesped(),
                 String.join(" ",
                         huesped.nombre(),
                         huesped.apellidoPaterno(),

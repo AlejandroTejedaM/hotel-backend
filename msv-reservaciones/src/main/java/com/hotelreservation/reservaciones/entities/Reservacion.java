@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -59,8 +61,16 @@ public class Reservacion {
     }
 
     private void validateDeletionEligibility() {
-        switch (this.getEstadoReserva()) {
-            case EN_CURSO, CONFIRMADA -> throw new IllegalStateException("No se puede eliminar una reservación en curso o confirmada");
+        if (Objects.requireNonNull(this.getEstadoReserva()) != EstadoReserva.CANCELADA) {
+            throw new IllegalStateException("No se puede eliminar una reservación que no este cancelada");
         }
+    }
+
+    public void changeHuesped(Long idHuesped) {
+        this.idHuesped = idHuesped;
+    }
+
+    public void changeHabitacion(Long idHabitacion) {
+        this.idHabitacion = idHabitacion;
     }
 }
