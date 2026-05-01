@@ -1,5 +1,6 @@
 package com.hotelreservation.habitaciones.services;
 
+import com.hotelreservation.commons.client.ReservaClient;
 import com.hotelreservation.commons.dto.habitaciones.HabitacionRequest;
 import com.hotelreservation.commons.dto.habitaciones.HabitacionResponse;
 import com.hotelreservation.commons.enums.EstadoHabitacion;
@@ -22,6 +23,7 @@ import java.util.List;
 public class HabitacionServiceImpl implements HabitacionService {
     private final HabitacionRepository habitacionRepository;
     private final HabitacionMapper habitacionMapper;
+    private final ReservaClient reservaClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -34,7 +36,11 @@ public class HabitacionServiceImpl implements HabitacionService {
         log.info("Actualizando el estado de la habitación con id: {} a: {}", id, idEstadoHabitacion);
         Habitacion habitacion = findActiveByIdOrException(id);
         EstadoHabitacion estadoAnterior = habitacion.getEstadoHabitacion();
-        habitacion.cambiarEstadoHabitacion(EstadoHabitacion.encontrarPorCodigo(idEstadoHabitacion));
+        EstadoHabitacion estadoNuevo = EstadoHabitacion.encontrarPorCodigo(idEstadoHabitacion);
+        if (estadoNuevo == EstadoHabitacion.DISPONIBLE) {
+            this.confirmRoomStatusToSetItAvailable(id);
+        }
+        habitacion.cambiarEstadoHabitacion(estadoNuevo);
         log.info("Se a actualizado el estado de la habitación con id: {} de: {} a: {}", id, estadoAnterior, habitacion.getEstadoHabitacion());
     }
 
@@ -110,6 +116,12 @@ public class HabitacionServiceImpl implements HabitacionService {
         log.info("Validando que el número de habitación: {} sea único durante una actualización", request.numero());
         if (habitacionRepository.existsByNumeroAndEstadoRegistroAndIdNot(request.numero(), EstadoRegistro.ACTIVO, id)) {
             throw new IllegalArgumentException("El número de habitación: " + request.numero() + " ya existe");
+        }
+    }
+
+    private void confirmRoomStatusToSetItAvailable(Long idHabitacion) {
+        if (reservaClient.isRoomBooked(idHabitacion)) {
+            throw new IllegalStateException("No puede volver a disponible, esta vinculada a una (Reserva creada o una Reserva con Check-in)");
         }
     }
 }

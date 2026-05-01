@@ -28,4 +28,9 @@ public class ReservacionController extends CommonController<ReservacionRequest, 
     public ResponseEntity<Boolean> tieneReservacionesPorIdHuespedYIdEstadoReservacion(@PathVariable Long idHuesped, @PathVariable Integer idEstado) {
         return ResponseEntity.ok(service.tieneReservacionesPorIdHuespedYEstadoReserva(idHuesped, idEstado));
     }
+
+    @GetMapping("/id-habitacion/{idHabitacion}/isRoomBooked")
+    public ResponseEntity<Boolean> isRoomBooked(@PathVariable Long idHabitacion) {
+        return ResponseEntity.ok(service.isRoomBooked(idHabitacion));
+    }
 }
