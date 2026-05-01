@@ -1,8 +1,10 @@
 package com.hotelreservation.huespedes.services;
 
+import com.hotelreservation.commons.client.ReservaClient;
 import com.hotelreservation.commons.dto.huespedes.HuespedRequest;
 import com.hotelreservation.commons.dto.huespedes.HuespedResponse;
 import com.hotelreservation.commons.enums.EstadoRegistro;
+import com.hotelreservation.commons.enums.EstadoReserva;
 import com.hotelreservation.commons.exceptions.EntidadRelacionadaException;import com.hotelreservation.commons.exceptions.RecursoNoEncontradoException;import com.hotelreservation.huespedes.entities.Huesped;
 import com.hotelreservation.huespedes.mappers.HuespedMapper;
 import com.hotelreservation.huespedes.repositories.HuespedRepository;
@@ -21,6 +23,7 @@ public class HuespedServiceImpl implements HuespedService{
 
     private final HuespedRepository huespedRepository;
     private final HuespedMapper huespedMapper;
+    private final ReservaClient reservaClient;
 
 
     @Override
@@ -89,10 +92,21 @@ public class HuespedServiceImpl implements HuespedService{
         Huesped huesped = huespedRepository.findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Huésped no encontrado"));
 
+
+        Boolean tieneReservacionesEnCurso = reservaClient
+                .tieneReservacionesPorIdHuespedYIdEstadoReservacion(
+                        EstadoReserva.EN_CURSO.getCodigo(), id
+                );
+
+        if (Boolean.TRUE.equals(tieneReservacionesEnCurso)) {
+            throw new EntidadRelacionadaException(
+                    "No se puede eliminar el huésped porque tiene reservaciones en curso (Check-In activo)"
+            );
+        }
+
         huesped.setEstadoRegistro(EstadoRegistro.ELIMINADO);
         huespedRepository.save(huesped);
         log.info("Huésped con id: {} eliminado...", id);
-
 
     }
 

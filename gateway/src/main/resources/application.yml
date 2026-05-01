@@ -39,6 +39,7 @@ spring:
 
             - id: msv-reservaciones
               uri: lb://msv-reservaciones
+
               predicates:
                 - Path=/api/reservaciones/**
               filters:
