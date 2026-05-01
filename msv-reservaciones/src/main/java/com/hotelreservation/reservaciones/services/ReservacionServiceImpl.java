@@ -77,8 +77,8 @@ public class ReservacionServiceImpl implements ReservacionService {
         log.info("Actualizando reservación con id: {}", id);
         Reservacion reservacion = findActiveByIdOrException(id);
         LocalDate fechaEntradaActual = reservacion.getFechaEntrada();
-        HabitacionResponse habitacionOriginal = findHabitacionActivaById(reservacion.getIdHabitacion());
-        HuespedResponse huespedOriginal = findActiveHuespedById(reservacion.getIdHuesped());
+        HabitacionResponse habitacionOriginal = findHabitacionById(reservacion.getIdHabitacion());
+        HuespedResponse huespedOriginal = findHuespedById(reservacion.getIdHuesped());
 
         LocalDate fechaEntrada = StringCustomUtils.stringToLocalDate(request.fechaEntrada());
         LocalDate fechaSalida = StringCustomUtils.stringToLocalDate(request.fechaSalida());
@@ -87,12 +87,12 @@ public class ReservacionServiceImpl implements ReservacionService {
         switch (reservacion.getEstadoReserva()) {
             case CONFIRMADA -> {
                 StringCustomUtils.validarFechasReservacion(request.fechaEntrada(), request.fechaSalida());
-                if (request.idHuesped() != huespedOriginal.id()) {
+                if (!Objects.equals(request.idHuesped(), huespedOriginal.id())) {
                     huespedActualizado = findActiveHuespedById(request.idHuesped());
                     reservacion.changeHuesped(huespedActualizado.id());
                 }
 
-                if (request.idHabitacion() != habitacionOriginal.id()) {
+                if (!Objects.equals(request.idHabitacion(), habitacionOriginal.id())) {
                     habitacionActualizada = findHabitacionActivaById(request.idHabitacion());
                     ensureHabitacionIsAvailable(habitacionActualizada);
                     changeEstadoHabitacion(habitacionOriginal.id(), EstadoHabitacion.DISPONIBLE);
