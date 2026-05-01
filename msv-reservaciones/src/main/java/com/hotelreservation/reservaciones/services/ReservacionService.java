@@ -7,4 +7,5 @@ import com.hotelreservation.commons.services.CrudService;
 public interface ReservacionService extends CrudService<ReservacionRequest, ReservacionResponse> {
     void changeEstadoReserva(Long idReserva, Integer idEstado);
     Boolean tieneReservacionesPorIdHuespedYEstadoReserva(Long idHuesped, Integer idEstado);
+    Boolean isRoomBooked(Long idHabitacion);
 }

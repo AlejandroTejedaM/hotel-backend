@@ -111,7 +111,7 @@ public class ReservacionServiceImpl implements ReservacionService {
                 reservacion.changeFechaSalida(fechaSalida);
             }
             case FINALIZADA, CANCELADA ->
-                    throw new IllegalStateException("No se pueden modificar reservaciones: " + List.of(EstadoReserva.CANCELADA, EstadoReserva.FINALIZADA));
+                    throw new IllegalStateException("No se pueden modificar reservaciones: " + List.of(EstadoReserva.CANCELADA.getDescripcion(), EstadoReserva.FINALIZADA.getDescripcion()));
         }
         log.info("Reservación con id: {} para habitación número: {} actualizada", id, habitacionOriginal.numero());
         return reservacionMapper.entidadARespuesta(reservacion,
@@ -151,7 +151,13 @@ public class ReservacionServiceImpl implements ReservacionService {
     public Boolean tieneReservacionesPorIdHuespedYEstadoReserva(Long idHuesped, Integer idEstado) {
         log.info("Buscando reservaciones por idHuesped: {} y estadoReserva: {}", idHuesped, idEstado);
         EstadoReserva estado = EstadoReserva.encontrarPorCodigo(idEstado);
-        return reservacionRepository.existsByIdHuespedAndEstadoReserva(idHuesped, estado);
+        return reservacionRepository.existsByIdHuespedAndEstadoReservaAndEstadoRegistro(idHuesped, estado, EstadoRegistro.ACTIVO);
+    }
+
+    @Override
+    public Boolean isRoomBooked(Long idHabitacion) {
+        log.info("Buscando reservaciones confirmadas o en curso por idHabitacion: {}", idHabitacion);
+        return reservacionRepository.existsByIdHabitacionAndEstadoReservaInAndEstadoRegistro(idHabitacion, List.of(EstadoReserva.CONFIRMADA, EstadoReserva.EN_CURSO), EstadoRegistro.ACTIVO);
     }
 
     public Reservacion findActiveByIdOrException(Long id) {
@@ -202,20 +208,20 @@ public class ReservacionServiceImpl implements ReservacionService {
             }
             case EN_CURSO -> {
                 if (!estadoAnterior.equals(EstadoReserva.CONFIRMADA)) {
-                    throw new IllegalStateException("Solo se puede hacer Check-in desde:" + EstadoReserva.CONFIRMADA);
+                    throw new IllegalStateException("Solo se puede hacer Check-in desde: " + EstadoReserva.CONFIRMADA.getDescripcion());
                 }
                 changeEstadoHabitacion(idHabitacion, EstadoHabitacion.OCUPADA);
             }
             case FINALIZADA -> {
                 if (estadoAnterior != EstadoReserva.EN_CURSO) {
-                    throw new IllegalStateException("Solo se puede hacer check-out desde: " + EstadoReserva.EN_CURSO);
+                    throw new IllegalStateException("Solo se puede hacer Check-out desde: " + EstadoReserva.EN_CURSO.getDescripcion());
                 }
                 changeEstadoHabitacion(idHabitacion, EstadoHabitacion.DISPONIBLE);
 
             }
             case CANCELADA -> {
                 if (estadoAnterior != EstadoReserva.CONFIRMADA) {
-                    throw new IllegalStateException("Solo se puede cancelar desde: " + EstadoReserva.CONFIRMADA);
+                    throw new IllegalStateException("Solo se puede Cancelar desde: " + EstadoReserva.CONFIRMADA.getDescripcion());
                 }
                 changeEstadoHabitacion(idHabitacion, EstadoHabitacion.DISPONIBLE);
             }
