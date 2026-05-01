@@ -29,11 +29,26 @@ public class SecurityConfig {
                 }))
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/**").hasAnyRole("ADMIN", "USER")
-                        .pathMatchers(HttpMethod.POST, "/**").hasAnyRole("ADMIN", "USER")
-                        .pathMatchers(HttpMethod.PUT, "/**").hasAnyRole("ADMIN", "USER")
-                        .pathMatchers(HttpMethod.DELETE, "/**").hasAnyRole("ADMIN")
-                        .pathMatchers(HttpMethod.PATCH, "/**").hasAnyRole("ADMIN", "USER")
+
+                        // --------------- RESERVACIONES ------------
+                        .pathMatchers(HttpMethod.GET,    "/api/reservaciones/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.PUT,    "/api/reservaciones/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.POST,   "/api/reservaciones/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.DELETE, "/api/reservaciones/**").hasAnyRole("ADMIN", "USER")
+
+                        // --------------- HABITACIONES ------------
+                        .pathMatchers(HttpMethod.GET,    "/api/habitaciones/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.PUT,    "/api/habitaciones/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.POST,   "/api/habitaciones/**").hasRole("ADMIN")
+                        .pathMatchers(HttpMethod.DELETE, "/api/habitaciones/**").hasRole("ADMIN")
+
+                        // --------------- HUESPEDES ------------
+                        .pathMatchers(HttpMethod.GET,    "/api/huespedes/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.POST,   "/api/huespedes/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.PUT,    "/api/huespedes/**").hasAnyRole("ADMIN", "USER")
+                        .pathMatchers(HttpMethod.DELETE, "/api/huespedes/**").hasAnyRole("ADMIN", "USER")
+                        .anyExchange().authenticated()
+
                 )
 
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt ->

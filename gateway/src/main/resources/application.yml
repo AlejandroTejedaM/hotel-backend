@@ -6,7 +6,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:9000/oauth2/jwks
+          issuer-uri: http://localhost:9000
 
   cloud:
     loadbalancer:
@@ -39,6 +39,7 @@ spring:
 
             - id: msv-reservaciones
               uri: lb://msv-reservaciones
+
               predicates:
                 - Path=/api/reservaciones/**
               filters:

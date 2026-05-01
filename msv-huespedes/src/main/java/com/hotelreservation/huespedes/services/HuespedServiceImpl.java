@@ -1,0 +1,153 @@
+package com.hotelreservation.huespedes.services;
+
+import com.hotelreservation.commons.client.ReservaClient;
+import com.hotelreservation.commons.dto.huespedes.HuespedRequest;
+import com.hotelreservation.commons.dto.huespedes.HuespedResponse;
+import com.hotelreservation.commons.enums.EstadoRegistro;
+import com.hotelreservation.commons.enums.EstadoReserva;
+import com.hotelreservation.commons.exceptions.EntidadRelacionadaException;import com.hotelreservation.commons.exceptions.RecursoNoEncontradoException;import com.hotelreservation.huespedes.entities.Huesped;
+import com.hotelreservation.huespedes.mappers.HuespedMapper;
+import com.hotelreservation.huespedes.repositories.HuespedRepository;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+
+@Service
+@Slf4j
+@Transactional
+@AllArgsConstructor
+
+public class HuespedServiceImpl implements HuespedService{
+
+    private final HuespedRepository huespedRepository;
+    private final HuespedMapper huespedMapper;
+    private final ReservaClient reservaClient;
+
+
+    @Override
+    public List<HuespedResponse> list() {
+        log.info("Obteniendo lista de huéspedes activos...");
+
+        return huespedRepository
+                .findAllByEstadoRegistro(EstadoRegistro.ACTIVO)
+                .stream()
+                .map(huespedMapper::entidadARespuesta)
+                .toList();
+    }
+
+    @Override
+    public HuespedResponse encontrarPorId(Long id) {
+        log.info("Buscando huésped con id: {}", id);
+
+        Huesped huesped = huespedRepository.findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
+                .orElseThrow(() -> new RecursoNoEncontradoException("El huesped no ha sido encontrado"));
+
+        return huespedMapper.entidadARespuesta(huesped);
+
+    }
+
+    @Override
+    public HuespedResponse registrar(HuespedRequest request) {
+        log.info("Registrando nuevo huesped con email: {}", request.email());
+
+        validarDuplicados(request);
+
+        Huesped huesped = huespedMapper.requestAEntidad(request);
+        Huesped guardado = huespedRepository.save(huesped);
+        log.info("Huésped registrado exitosamente con id: {}", guardado.getId());
+        return huespedMapper.entidadARespuesta(guardado);
+
+    }
+    @Override
+    public HuespedResponse actualizar(HuespedRequest request, Long id) {
+        log.info("Actualizando huésped con id: {}", id);
+
+        Huesped huesped = huespedRepository
+                .findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Huésped no encontrado"));
+
+        validarDuplicadosUpdate(request, id);
+
+        huesped.setNombre(request.nombre());
+        huesped.setApellidoPaterno(request.apellidoPaterno());
+        huesped.setApellidoMaterno(request.apellidoMaterno());
+        huesped.setEmail(request.email());
+        huesped.setTelefono(request.telefono());
+        huesped.setDocumento(request.documento());
+        huesped.setNacionalidad(request.nacionalidad());
+
+        Huesped actualizado = huespedRepository.save(huesped);
+        log.info("Huésped con id: {} actualizado correctamente", id);
+
+        return huespedMapper.entidadARespuesta(actualizado);
+
+    }
+
+    @Override
+    public void eliminar(Long id) {
+        log.info("Eliminando (lógicamente) huésped con id: {}", id);
+
+        Huesped huesped = huespedRepository.findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Huésped no encontrado"));
+
+
+        Boolean tieneReservacionesEnCurso = reservaClient
+                .tieneReservacionesPorIdHuespedYIdEstadoReservacion(
+                        EstadoReserva.EN_CURSO.getCodigo(), id
+                );
+
+        if (Boolean.TRUE.equals(tieneReservacionesEnCurso)) {
+            throw new EntidadRelacionadaException(
+                    "No se puede eliminar el huésped porque tiene reservaciones en curso (Check-In activo)"
+            );
+        }
+
+        huesped.setEstadoRegistro(EstadoRegistro.ELIMINADO);
+        huespedRepository.save(huesped);
+        log.info("Huésped con id: {} eliminado...", id);
+
+    }
+
+    private void validarDuplicados(HuespedRequest request){
+        log.info("Validando los duplicados para nuevo huésped");
+
+        if (huespedRepository.findByEmailAndEstadoRegistro(request.email(), EstadoRegistro.ACTIVO).isPresent()) {
+            throw new EntidadRelacionadaException("El email ya registrado");
+        }
+
+        if (huespedRepository.findByTelefonoAndEstadoRegistro(request.telefono(), EstadoRegistro.ACTIVO).isPresent()) {
+            throw new EntidadRelacionadaException("El telefono ya registrado");
+        }
+        if (huespedRepository.findByDocumentoAndEstadoRegistro(request.documento(), EstadoRegistro.ACTIVO).isPresent()) {
+            throw new EntidadRelacionadaException("El documento ya registrado");
+        }
+
+    }
+    private void validarDuplicadosUpdate(HuespedRequest request, Long id) {
+        log.info("Validando duplicados para actualización de huésped con id: {}", id);
+
+        var email = huespedRepository.findByEmailAndEstadoRegistro(request.email(), EstadoRegistro.ACTIVO);
+        if (email.isPresent() && !email.get().getId().equals(id)) {
+            throw new EntidadRelacionadaException("Email ya registrado");
+        }
+
+        var telefono = huespedRepository.findByTelefonoAndEstadoRegistro(request.telefono(), EstadoRegistro.ACTIVO);
+        if (telefono.isPresent() && !telefono.get().getId().equals(id)) {
+            throw new EntidadRelacionadaException("Teléfono ya registrado");
+        }
+
+        var documento = huespedRepository.findByDocumentoAndEstadoRegistro(request.documento(), EstadoRegistro.ACTIVO);
+        if (documento.isPresent() && !documento.get().getId().equals(id)) {
+            throw new EntidadRelacionadaException("Documento ya registrado");
+        }
+    }
+
+    @Override
+    public HuespedResponse encontrarPorIdSinValidarEstado(Long id) {
+        log.info("Buscando huesped con id: {} sin validar el estado del registro...");
+        Huesped huesped = huespedRepository.findById(id).orElseThrow(() -> new RecursoNoEncontradoException("El huesped no ha sido encontrado..."));
+        return huespedMapper.entidadARespuesta(huesped);
+    }
+}
